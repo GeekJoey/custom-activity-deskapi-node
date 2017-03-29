@@ -15,7 +15,7 @@
     "arguments": {
         "execute": {     	
 			"inArguments":[	
-				{ "caseID":"{{Interaction.joey-jb-example-activity-desk-update-case.caseID}}" }
+				{ "caseID":"{{Interaction.REST-2.caseID}}" }
 			],        	
             "outArguments": [				
 			],
