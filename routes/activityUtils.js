@@ -45,9 +45,9 @@ exports.logData = function ( req ) {
 
 
 exports.deskCreds = {
-	subdomain: '__subdomain__'
-	,username: '__username__'
-	,userpw: '__password__'
+	subdomain: 'joeywph'
+	,username: 'joeynickiman@gmail.com'
+	,userpw: 'Yyz@333444'
 };
 
 exports.deskCreds.host = exports.deskCreds.subdomain + '.desk.com'; 
