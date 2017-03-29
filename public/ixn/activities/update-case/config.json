@@ -15,7 +15,7 @@
     "arguments": {
         "execute": {     	
 			"inArguments":[	
-				{ "caseID":"12345" }
+				{ "caseID":"{{Contact.Attribute.Joey_Custom_DE.Email}}" }
 			],        	
             "outArguments": [				
 			],
