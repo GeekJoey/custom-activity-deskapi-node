@@ -7,25 +7,20 @@ var JWT         = require('./lib/jwtDecoder');
 var path        = require('path');
 var request     = require('request');
 var routes      = require('./routes');
-var activityCreate   = require('./routes/activityCreate');
-var activityUpdate   = require('./routes/activityUpdate');
-var activityUtils    = require('./routes/activityUtils');
-var pkgjson = require( './package.json' );
+var activity    = require('./routes/activity');
+var trigger     = require('./routes/trigger');
 
 var app = express();
 
 // Register configs for the environments where the app functions
 // , these can be stored in a separate file using a module like config
-
-
 var APIKeys = {
-    appId           : '__insert_your_app_id__',
-    clientId        : '__insert_your_app_client_id__',
-    clientSecret    : '__insert_your_app_client_secret__',
-    appSignature    : '__insert_your_app_signature__',
+    appId           : '19f61f0f-260d-4f1b-b1e7-0d93a54e1600',
+    clientId        : '381oumcqyzoiyix0l5f0jlo5',
+    clientSecret    : 'NYUZT1Lp9BOscEj6BERVhliV',
+    appSignature    : '0zy4pe503z5x1pped1onydptolqlrtkiazwdbxzdaptpf54sq1ufyak4zkjtp2o5ehrijzztfyru04oud2mrehzcftnupgec1ewqgmgabzy4mzq0bzlwl0gqnrx5amgxuicgrfpo3jxxapug3mb2iv4dre0fd33nimqjjqcxtu1jfqnhom2ivq2nzdpajtliu4qoc3aa3qkpwdyp2vhzwi00hovybhwug0bpwxbvnjrvllcph5uqsxrsuszyi4e',
     authUrl         : 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
 };
-
 
 // Simple custom middleware
 function tokenFromJWT( req, res, next ) {
@@ -48,7 +43,7 @@ function tokenFromJWT( req, res, next ) {
 app.use(express.cookieParser());
 
 // TODO: MaxAge for cookie based on token exp?
-app.use(express.cookieSession({secret: "DeskAPI-CookieSecret0980q8w0r8we09r8"}));
+app.use(express.cookieSession({secret: "HelloWorld-CookieSecret"}));
 
 // Configure Express
 app.set('port', process.env.PORT || 3000);
@@ -72,20 +67,53 @@ app.get('/', routes.index );
 app.post('/login', tokenFromJWT, routes.login );
 app.post('/logout', routes.logout );
 
-// Custom Activity Routes for interacting with Desk.com API
-app.post('/ixn/activities/create-case/save/', activityCreate.save );
-app.post('/ixn/activities/create-case/validate/', activityCreate.validate );
-app.post('/ixn/activities/create-case/publish/', activityCreate.publish );
-app.post('/ixn/activities/create-case/execute/', activityCreate.execute );
+// Custom Hello World Activity Routes
+app.post('/ixn/activities/hello-world/save/', activity.save );
+app.post('/ixn/activities/hello-world/validate/', activity.validate );
+app.post('/ixn/activities/hello-world/publish/', activity.publish );
+app.post('/ixn/activities/hello-world/execute/', activity.execute );
 
-app.post('/ixn/activities/update-case/save/', activityUpdate.save );
-app.post('/ixn/activities/update-case/validate/', activityUpdate.validate );
-app.post('/ixn/activities/update-case/publish/', activityUpdate.publish );
-app.post('/ixn/activities/update-case/execute/', activityUpdate.execute );
+// Custom Hello World Trigger Route
+app.post('/ixn/triggers/hello-world/', trigger.edit );
+
+// Abstract Event Handler
+app.post('/fireEvent/:type', function( req, res ) {
+    var data = req.body;
+    var triggerIdFromAppExtensionInAppCenter = '__insert_your_trigger_key_here__';
+    var JB_EVENT_API = 'https://www.exacttargetapis.com/interaction-experimental/v1/events';
+    var reqOpts = {};
+
+    if( 'helloWorld' !== req.params.type ) {
+        res.send( 400, 'Unknown route param: "' + req.params.type +'"' );
+    } else {
+        // Hydrate the request
+        reqOpts = {
+            url: JB_EVENT_API,
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + req.session.token
+            },
+            body: JSON.stringify({
+                ContactKey: data.alternativeEmail,
+                EventDefinitionKey: triggerIdFromAppExtensionInAppCenter,
+                Data: data
+            })
+        };
+
+        request( reqOpts, function( error, response, body ) {
+            if( error ) {
+                console.error( 'ERROR: ', error );
+                res.send( response, 400, error );
+            } else {
+                res.send( body, 200, response);
+            }
+        }.bind( this ) );
+    }
+});
 
 app.get('/clearList', function( req, res ) {
 	// The client makes this request to get the data
-	activityUtils.logExecuteData = [];
+	activity.logExecuteData = [];
 	res.send( 200 );
 });
 
@@ -93,19 +121,12 @@ app.get('/clearList', function( req, res ) {
 // Used to populate events which have reached the activity in the interaction we created
 app.get('/getActivityData', function( req, res ) {
 	// The client makes this request to get the data
-	if( !activityUtils.logExecuteData.length ) {
+	if( !activity.logExecuteData.length ) {
 		res.send( 200, {data: null} );
 	} else {
-		res.send( 200, {data: activityUtils.logExecuteData} );
+		res.send( 200, {data: activity.logExecuteData} );
 	}
 });
-
-app.get( '/version', function( req, res ) {
-	res.setHeader( 'content-type', 'application/json' );
-	res.send(200, JSON.stringify( {
-		version: pkgjson.version
-	} ) );
-} );
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
