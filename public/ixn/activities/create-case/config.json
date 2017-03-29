@@ -8,7 +8,7 @@
     "type": "REST",
     "lang": {
         "en-US": {
-            "name": "Desk.com Create Case",
+            "name": "创建Case",
             "description": "Activity for creating a case via Desk.com API."
         }
     },
